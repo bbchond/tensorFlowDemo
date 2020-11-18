@@ -5,7 +5,7 @@ import sklearn.linear_model
 import sklearn.neighbors
 import os
 import matplotlib as mpl
-import urllib
+import urllib.request
 
 
 def prepare_country_stats(oecd_bli, gdp_per_capita):
@@ -15,11 +15,32 @@ def prepare_country_stats(oecd_bli, gdp_per_capita):
     gdp_per_capita.set_index("Country", inplace=True)
     full_country_stats = pd.merge(left=oecd_bli, right=gdp_per_capita,
                                   left_index=True, right_index=True)
-
     full_country_stats.sort_values(by="GDP per capita", inplace=True)
+    print(full_country_stats[["GDP per capita", "Life satisfaction"]].loc["United States"])
     remove_indices = [0, 1, 6, 8, 33, 34, 35]
     keep_indeices = list(set(range(36)) - set(remove_indices))
-    return full_country_stats[["GDP per capita", "Life satisfaction"]].iloc[keep_indeices]
+
+    sample_data = full_country_stats[["GDP per capita", 'Life satisfaction']].iloc[keep_indeices]
+    remove_data = full_country_stats[["GDP per capita", 'Life satisfaction']].iloc[remove_indices]
+    sample_data.plot(kind='scatter', x="GDP per capita", y='Life satisfaction', figsize=(5, 3))
+    plt.axis([0, 60000, 0, 10])
+    # 指定字母在图上的显示位置
+    position_text = {
+        "Hungary": (5000, 1),
+        "Korea": (18000, 1.7),
+        "France": (29000, 2.4),
+        "Australia": (40000, 3.0),
+        "United States": (52000, 3.8),
+    }
+    for country, post_text in position_text.items():
+        pos_data_x, pos_data_y = sample_data.loc[country]
+        country = "U.S." if country == "United States" else country
+        plt.annotate(country, xy=(pos_data_x, pos_data_y), xytext=post_text,
+                     arrowprops=dict(facecolor='black', width=0.5, shrink=0.1, headwidth=5))
+        plt.plot(pos_data_x, pos_data_y, "ro")
+    plt.xlabel("GDP per capita (USD)")
+    plt.show()
+    return sample_data
 
 
 datapath = os.path.join("datasets", "lifesat", "")
